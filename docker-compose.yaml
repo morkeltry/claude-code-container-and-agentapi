@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  claude-agent:
+    image: claude-dev:latest
+    container_name: claude-agent
+    restart: unless-stopped
+    volumes:
+      - ./code:/code  # Your ~/code/Claude mounted here
+      - ~/.config/Claude_dotconfig:/home/dev/.config
+      - claude-home:/home/dev
+    ports:
+      # Claude Code web UIs
+      - "127.0.0.1:3300-3309:3000-3009" 
+      - "127.0.0.1:5500-5509:5000-5009" 
+      - "127.0.0.1:8800-8809:8000-8009"
+      - "127.0.0.1:9080:8080"
+    env_file:
+      - .env  # API_KEY only - rest in Dockerfile
+    command: >
+      sh -c "
+        agentapi server --port 8080 --allowed-origins 'localhost,127.0.0.1,192.168.3.99' -- claude &
+        tail -f /dev/null
+      "
+
+volumes:
+  claude-home:
