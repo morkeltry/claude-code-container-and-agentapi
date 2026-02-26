@@ -1,11 +1,9 @@
 FROM node:22-bookworm
 
-# Create non-root user
-RUN useradd -ms /bin/bash dev
-USER dev
-
 # Create dev user with passwordless sudo
 RUN useradd -m -s /bin/bash dev \
+  && chown -R dev:dev /home/dev \
+  && mkdir /etc/sudoers.d \
   && echo "dev ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/dev \
   && chmod 0440 /etc/sudoers.d/dev
 
@@ -17,18 +15,18 @@ RUN apt-get update && apt-get install -y \
     # python3.12 python3.12-venv python3.12-dev \
   && rm -rf /var/lib/apt/lists/*
 
-# Switch to dev user
-USER dev
-
 RUN corepack enable \
   && corepack prepare yarn@stable --activate \
   && corepack prepare pnpm@latest --activate
 
 RUN npm install -g @anthropic-ai/claude-code
 
-RUN curl -sSL https://github.com/coder/agentapi/releases/latest/download/agentapi-linux-x64 \
+RUN curl -sSL https://github.com/coder/agentapi/releases/latest/download/agentapi-linux-amd64 \
     -o /usr/local/bin/agentapi \
   && chmod +x /usr/local/bin/agentapi
+
+# Switch to dev user
+USER dev
 
 RUN git config --global user.email "nyam@ny.am" \
   && git config --global user.name "nyam" \
@@ -48,6 +46,7 @@ RUN echo 'export TERM=xterm-256color' >> /home/dev/.bashrc \
 #   && update-alternatives --install /usr/bin/python python /usr/bin/python3.12 1 \
 #   && update-alternatives --install /usr/bin/pip pip /usr/bin/pip3.12 1
 
+# Working directory
 WORKDIR /code
 
 ENV CLAUDE_DISABLE_TELEMETRY=1 \

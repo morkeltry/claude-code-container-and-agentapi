@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   claude-agent:
     image: claude-dev:latest
